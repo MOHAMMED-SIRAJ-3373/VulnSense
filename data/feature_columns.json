@@ -1,0 +1,21 @@
+{
+  "features": [
+    "port",
+    "attack_vector",
+    "attack_complexity",
+    "privileges_required",
+    "user_interaction",
+    "scope",
+    "conf_impact",
+    "integ_impact",
+    "avail_impact",
+    "encrypted",
+    "uses_default_creds",
+    "is_high_risk_service",
+    "port_exposure_category",
+    "service",
+    "vuln_type",
+    "protocol"
+  ],
+  "target": "risk_label"
+}

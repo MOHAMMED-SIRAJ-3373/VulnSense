@@ -1,0 +1,195 @@
+{
+  "best_model": "Random Forest",
+  "models": {
+    "Decision Tree": {
+      "name": "Decision Tree",
+      "accuracy": 0.65,
+      "precision": 0.6493,
+      "recall": 0.65,
+      "f1": 0.6492,
+      "cv_f1": 0.6846,
+      "per_class": {
+        "High": {
+          "precision": 0.6533,
+          "recall": 0.6901,
+          "f1": 0.6712,
+          "support": 71
+        },
+        "Medium": {
+          "precision": 0.6667,
+          "recall": 0.641,
+          "f1": 0.6536,
+          "support": 78
+        },
+        "Low": {
+          "precision": 0.5,
+          "recall": 0.4545,
+          "f1": 0.4762,
+          "support": 11
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "High",
+          "Medium",
+          "Low"
+        ],
+        "matrix": [
+          [
+            49,
+            22,
+            0
+          ],
+          [
+            23,
+            50,
+            5
+          ],
+          [
+            3,
+            3,
+            5
+          ]
+        ]
+      },
+      "cm_image": "confusion_matrix_dt.png",
+      "params": {
+        "max_depth": 11,
+        "class_weight": "balanced"
+      }
+    },
+    "Random Forest": {
+      "name": "Random Forest",
+      "accuracy": 0.7812,
+      "precision": 0.7825,
+      "recall": 0.7812,
+      "f1": 0.7759,
+      "cv_f1": 0.7183,
+      "per_class": {
+        "High": {
+          "precision": 0.8056,
+          "recall": 0.8169,
+          "f1": 0.8112,
+          "support": 71
+        },
+        "Medium": {
+          "precision": 0.759,
+          "recall": 0.8077,
+          "f1": 0.7826,
+          "support": 78
+        },
+        "Low": {
+          "precision": 0.8,
+          "recall": 0.3636,
+          "f1": 0.5,
+          "support": 11
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "High",
+          "Medium",
+          "Low"
+        ],
+        "matrix": [
+          [
+            58,
+            13,
+            0
+          ],
+          [
+            14,
+            63,
+            1
+          ],
+          [
+            0,
+            7,
+            4
+          ]
+        ]
+      },
+      "cm_image": "confusion_matrix_rf.png",
+      "params": {
+        "n_estimators": 200,
+        "max_depth": 13,
+        "class_weight": "balanced"
+      }
+    }
+  },
+  "baseline": {
+    "accuracy": 0.8812,
+    "f1": 0.881,
+    "description": "CVSS score threshold only (>= 7.0 \u2192 High, >= 4.0 \u2192 Medium)"
+  },
+  "accuracy": 0.7812,
+  "precision": 0.7825,
+  "recall": 0.7812,
+  "f1": 0.7759,
+  "cv_f1": 0.7183,
+  "per_class": {
+    "High": {
+      "precision": 0.8056,
+      "recall": 0.8169,
+      "f1": 0.8112,
+      "support": 71
+    },
+    "Medium": {
+      "precision": 0.759,
+      "recall": 0.8077,
+      "f1": 0.7826,
+      "support": 78
+    },
+    "Low": {
+      "precision": 0.8,
+      "recall": 0.3636,
+      "f1": 0.5,
+      "support": 11
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "High",
+      "Medium",
+      "Low"
+    ],
+    "matrix": [
+      [
+        58,
+        13,
+        0
+      ],
+      [
+        14,
+        63,
+        1
+      ],
+      [
+        0,
+        7,
+        4
+      ]
+    ]
+  },
+  "model_params": {
+    "bootstrap": true,
+    "ccp_alpha": 0.0,
+    "class_weight": "balanced",
+    "criterion": "gini",
+    "max_depth": 13,
+    "max_features": "sqrt",
+    "max_leaf_nodes": null,
+    "max_samples": null,
+    "min_impurity_decrease": 0.0,
+    "min_samples_leaf": 1,
+    "min_samples_split": 2,
+    "min_weight_fraction_leaf": 0.0,
+    "monotonic_cst": null,
+    "n_estimators": 200,
+    "n_jobs": -1,
+    "oob_score": false,
+    "random_state": 42,
+    "verbose": 0,
+    "warm_start": false
+  }
+}

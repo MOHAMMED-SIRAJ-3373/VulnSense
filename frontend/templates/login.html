@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VulnSense — Sign In</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230d1117'/><path d='M16 4 L28 10 L28 18 C28 24 22 28 16 30 C10 28 4 24 4 18 L4 10 Z' fill='none' stroke='%2339d0d8' stroke-width='2'/><circle cx='16' cy='17' r='3' fill='%2339d0d8'/></svg>">
+  <link rel="stylesheet" href="/static/css/vulnsense.css">
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <!-- SVG Logo -->
+    <div class="login-logo">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-label="VulnSense logo">
+        <rect width="36" height="36" rx="8" fill="#161b22"/>
+        <path d="M18 5 L31 11 L31 20 C31 27 25 31 18 33 C11 31 5 27 5 20 L5 11 Z"
+              fill="none" stroke="#39d0d8" stroke-width="1.8" stroke-linejoin="round"/>
+        <circle cx="18" cy="19" r="3.5" fill="#39d0d8"/>
+        <path d="M18 15.5 L18 10" stroke="#39d0d8" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M14.5 19 L10 19" stroke="#39d0d8" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M21.5 19 L26 19" stroke="#39d0d8" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="login-logo-text">Vuln<span>Sense</span></div>
+      </div>
+    </div>
+
+    <p class="login-tagline">
+      AI-assisted vulnerability risk classification and reporting platform.<br>
+      CST3590 Final Year Project &mdash; Controlled Lab Environment.
+    </p>
+
+    <div class="login-divider"></div>
+
+    <form id="loginForm" autocomplete="on" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Enter your username"
+          autocomplete="username"
+          required
+          data-testid="input-username"
+        >
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="field-password">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+            data-testid="input-password"
+          >
+          <button type="button" class="password-toggle" id="togglePw"
+                  aria-label="Show password" data-testid="button-toggle-password">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" id="eyeIcon">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="loginBtn" data-testid="button-login">
+        Sign In
+      </button>
+
+      <div class="login-error" id="loginError" role="alert"></div>
+    </form>
+
+    <div class="login-footer">
+      <strong>Default credentials:</strong> admin / vulnsense2024<br>
+      This system is for use in approved lab environments only.<br>
+      Results are for educational purposes and are not production-grade.
+    </div>
+  </div>
+
+  <script>
+    const API = '';  // same origin
+
+    // ── Password visibility toggle ─────────────────────────────
+    const toggleBtn = document.getElementById('togglePw');
+    const pwInput   = document.getElementById('password');
+    const eyeIcon   = document.getElementById('eyeIcon');
+
+    toggleBtn.addEventListener('click', () => {
+      const visible = pwInput.type === 'text';
+      pwInput.type = visible ? 'password' : 'text';
+      toggleBtn.setAttribute('aria-label', visible ? 'Show password' : 'Hide password');
+      eyeIcon.innerHTML = visible
+        ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+        : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    });
+
+    // ── Form submit ────────────────────────────────────────────
+    const form     = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const errorBox = document.getElementById('loginError');
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.classList.add('visible');
+    }
+
+    function clearError() {
+      errorBox.classList.remove('visible');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!username || !password) {
+        showError('Please enter both username and password.');
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Signing in…';
+
+      try {
+        const res = await fetch(`${API}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || 'Login failed. Please try again.');
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Sign In';
+          return;
+        }
+
+        // Store session in memory (sessionStorage is fine for lab use)
+        sessionStorage.setItem('vs_token', data.token);
+        sessionStorage.setItem('vs_user', data.username);
+        sessionStorage.setItem('vs_role', data.role);
+
+        // Go to readiness check first, then dashboard
+        window.location.href = '/readiness';
+      } catch (err) {
+        showError('Could not reach the VulnSense server. Is it running?');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Sign In';
+      }
+    });
+
+    // If already logged in, skip straight to readiness
+    if (sessionStorage.getItem('vs_token')) {
+      window.location.href = '/readiness';
+    }
+  </script>
+</body>
+</html>

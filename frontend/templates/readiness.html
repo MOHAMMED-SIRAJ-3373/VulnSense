@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VulnSense — System Readiness</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230d1117'/><path d='M16 4 L28 10 L28 18 C28 24 22 28 16 30 C10 28 4 24 4 18 L4 10 Z' fill='none' stroke='%2339d0d8' stroke-width='2'/><circle cx='16' cy='17' r='3' fill='%2339d0d8'/></svg>">
+  <link rel="stylesheet" href="/static/css/vulnsense.css">
+</head>
+<body class="readiness-page">
+  <div class="readiness-card">
+
+    <!-- Header -->
+    <div class="readiness-header">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+          <rect width="36" height="36" rx="8" fill="#161b22"/>
+          <path d="M18 5 L31 11 L31 20 C31 27 25 31 18 33 C11 31 5 27 5 20 L5 11 Z"
+                fill="none" stroke="#39d0d8" stroke-width="1.8" stroke-linejoin="round"/>
+          <circle cx="18" cy="19" r="3.5" fill="#39d0d8"/>
+        </svg>
+        <span class="readiness-title">System Readiness</span>
+      </div>
+      <p class="readiness-subtitle">
+        Verifying that all required components are installed and configured
+        before entering the dashboard.
+      </p>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="readiness-status-bar">
+      <div class="readiness-status-fill" id="progressFill" style="width:0%"></div>
+    </div>
+
+    <!-- Check list -->
+    <ul class="readiness-list" id="checkList">
+      <li class="readiness-item" data-check="python">
+        <div class="readiness-icon loading" id="icon-python">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.3"/></svg>
+        </div>
+        <div>
+          <div class="readiness-item-label">Python 3.10+</div>
+          <div class="readiness-item-detail" id="detail-python">Checking…</div>
+        </div>
+      </li>
+      <li class="readiness-item" data-check="packages">
+        <div class="readiness-icon loading" id="icon-packages">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.3"/></svg>
+        </div>
+        <div>
+          <div class="readiness-item-label">Python Packages</div>
+          <div class="readiness-item-detail" id="detail-packages">Checking…</div>
+        </div>
+      </li>
+      <li class="readiness-item" data-check="model">
+        <div class="readiness-icon loading" id="icon-model">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.3"/></svg>
+        </div>
+        <div>
+          <div class="readiness-item-label">ML Model Artefacts</div>
+          <div class="readiness-item-detail" id="detail-model">Checking…</div>
+        </div>
+      </li>
+      <li class="readiness-item" data-check="database">
+        <div class="readiness-icon loading" id="icon-database">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.3"/></svg>
+        </div>
+        <div>
+          <div class="readiness-item-label">Database</div>
+          <div class="readiness-item-detail" id="detail-database">Checking…</div>
+        </div>
+      </li>
+      <li class="readiness-item" data-check="nmap">
+        <div class="readiness-icon loading" id="icon-nmap">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.3"/></svg>
+        </div>
+        <div>
+          <div class="readiness-item-label">nmap (optional)</div>
+          <div class="readiness-item-detail" id="detail-nmap">Checking…</div>
+        </div>
+      </li>
+    </ul>
+
+    <!-- CTA area -->
+    <div id="ctaArea">
+      <p style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:12px" id="ctaMsg">
+        Running checks…
+      </p>
+      <button class="btn-primary" id="enterBtn" style="display:none" data-testid="button-enter-dashboard">
+        Enter Dashboard
+      </button>
+      <div id="fixInstructions" style="display:none">
+        <div style="background:var(--risk-high-bg);border:1px solid rgba(248,81,73,0.3);
+                    border-radius:var(--radius);padding:12px 14px;font-size:var(--text-sm);
+                    color:var(--risk-high);margin-top:8px;">
+          <strong>Missing requirements detected.</strong><br>
+          <span id="fixDetail"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back to login -->
+    <div style="margin-top:24px;text-align:center">
+      <a href="/" style="font-size:var(--text-xs);color:var(--text-faint)">
+        &larr; Back to sign in
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const token = sessionStorage.getItem('vs_token');
+    if (!token) window.location.href = '/';
+
+    const CHECK_ORDER = ['python', 'packages', 'model', 'database', 'nmap'];
+
+    const PASS_ICON = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/></svg>`;
+
+    const FAIL_ICON = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="3" stroke-linecap="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+    const WARN_ICON = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.5">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+
+    async function runChecks() {
+      try {
+        const res = await fetch('/api/health', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        let passed = 0;
+        const fixes = [];
+
+        CHECK_ORDER.forEach((key, i) => {
+          const check  = data.checks[key];
+          const iconEl = document.getElementById(`icon-${key}`);
+          const detEl  = document.getElementById(`detail-${key}`);
+
+          // nmap is optional — warn rather than fail
+          const isOptional = key === 'nmap';
+
+          if (check.ok) {
+            iconEl.className = 'readiness-icon pass';
+            iconEl.innerHTML = PASS_ICON;
+            passed++;
+          } else if (isOptional) {
+            iconEl.className = 'readiness-icon warn';
+            iconEl.innerHTML = WARN_ICON;
+            passed++;  // optional — still counts toward progress
+          } else {
+            iconEl.className = 'readiness-icon fail';
+            iconEl.innerHTML = FAIL_ICON;
+            fixes.push(`${key}: ${check.detail}`);
+          }
+
+          detEl.textContent = check.detail;
+
+          // Staggered fill
+          setTimeout(() => {
+            const pct = Math.round(((i + 1) / CHECK_ORDER.length) * 100);
+            document.getElementById('progressFill').style.width = pct + '%';
+          }, i * 120);
+        });
+
+        const allCriticalOk = !['python', 'packages', 'model', 'database']
+          .some(k => !data.checks[k].ok);
+
+        const ctaMsg  = document.getElementById('ctaMsg');
+        const enterBtn = document.getElementById('enterBtn');
+        const fixDiv  = document.getElementById('fixInstructions');
+        const fixDet  = document.getElementById('fixDetail');
+
+        if (allCriticalOk) {
+          ctaMsg.textContent = data.checks.nmap.ok
+            ? 'All systems ready. You may enter the dashboard.'
+            : 'Core systems ready. nmap not found — socket-based scanner will be used as fallback.';
+          enterBtn.style.display = 'block';
+        } else {
+          ctaMsg.textContent = 'Some required components are missing. Please fix them and restart the app.';
+          fixDiv.style.display = 'block';
+          fixDet.textContent = fixes.join(' | ');
+        }
+
+      } catch (err) {
+        document.getElementById('ctaMsg').textContent =
+          'Could not reach the server. Is VulnSense running?';
+      }
+    }
+
+    document.getElementById('enterBtn').addEventListener('click', () => {
+      window.location.href = '/dashboard';
+    });
+
+    runChecks();
+  </script>
+</body>
+</html>

@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="dashboard-html">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VulnSense Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230d1117'/><path d='M16 4 L28 10 L28 18 C28 24 22 28 16 30 C10 28 4 24 4 18 L4 10 Z' fill='none' stroke='%2339d0d8' stroke-width='2'/><circle cx='16' cy='17' r='3' fill='%2339d0d8'/></svg>">
+  <link rel="stylesheet" href="/static/css/vulnsense.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="dashboard-body">
+<div class="dashboard">
+
+  <!-- ═══ SIDEBAR ═══════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="26" height="26" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="8" fill="#1c2330"/>
+        <path d="M18 5 L31 11 L31 20 C31 27 25 31 18 33 C11 31 5 27 5 20 L5 11 Z"
+              fill="none" stroke="#39d0d8" stroke-width="1.8"/>
+        <circle cx="18" cy="19" r="3" fill="#39d0d8"/>
+      </svg>
+      <div class="sidebar-logo-text">Vuln<span>Sense</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Analysis</div>
+      <button class="nav-item active" onclick="showPage('overview')" data-testid="nav-overview">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </button>
+      <button class="nav-item" onclick="showPage('scanner')" data-testid="nav-scanner">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Scanner
+      </button>
+      <button class="nav-item" onclick="showPage('findings')" data-testid="nav-findings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Findings
+      </button>
+      <button class="nav-item" onclick="showPage('remediation')" data-testid="nav-remediation">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Remediation
+      </button>
+      <button class="nav-item" onclick="showPage('history')" data-testid="nav-history">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4.5"/><polyline points="3 2 3 7 8 7"/></svg>
+        Scan History
+      </button>
+
+      <div class="sidebar-section">Model</div>
+      <button class="nav-item" onclick="showPage('mlreport')" data-testid="nav-mlreport">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        ML Evaluation
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div>
+          <div class="sidebar-user-name" id="sidebarUser">—</div>
+          <div style="font-size:var(--text-xs);color:var(--text-faint)" id="sidebarRole">analyst</div>
+        </div>
+      </div>
+      <button class="sidebar-logout" onclick="logout()" data-testid="button-logout">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═════════════════════════════════════════════════ -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Overview</div>
+      <div class="topbar-right">
+        <span style="font-size:var(--text-xs);color:var(--text-faint);font-family:var(--font-mono)" id="topbarTime"></span>
+      </div>
+    </div>
+
+    <div class="page-content" id="pageContent">
+
+      <!-- ════════════════════════════════════════════════════════
+           OVERVIEW
+      ════════════════════════════════════════════════════════ -->
+      <div id="page-overview">
+        <div class="kpi-grid" id="kpiGrid">
+          <div class="kpi-card kpi-high"><div class="kpi-label">High Risk</div><div class="kpi-value" id="kpi-high">—</div></div>
+          <div class="kpi-card kpi-med"><div class="kpi-label">Medium Risk</div><div class="kpi-value" id="kpi-med">—</div></div>
+          <div class="kpi-card kpi-low"><div class="kpi-label">Low Risk</div><div class="kpi-value" id="kpi-low">—</div></div>
+          <div class="kpi-card kpi-cyan"><div class="kpi-label">Total Findings</div><div class="kpi-value" id="kpi-total">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Scans Run</div><div class="kpi-value" id="kpi-scans">—</div></div>
+        </div>
+
+        <div class="two-col" style="margin-bottom:var(--space-6)">
+          <div class="card"><div class="section-title">Risk Distribution</div><div class="chart-wrap"><canvas id="chartRisk"></canvas></div></div>
+          <div class="card"><div class="section-title">Risk Trend Across Scans</div><div class="chart-wrap"><canvas id="chartTimeline"></canvas></div></div>
+        </div>
+
+        <div class="two-col" style="margin-bottom:var(--space-6)">
+          <div class="card"><div class="section-title">Findings by Host</div><div class="chart-wrap"><canvas id="chartHost"></canvas></div></div>
+          <div class="card">
+            <div class="section-title">Remediation Progress</div>
+            <div id="remProgress"><div class="empty-state"><p>Run a scan to track remediation.</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════
+           SCANNER
+      ════════════════════════════════════════════════════════ -->
+      <div id="page-scanner" class="hidden">
+        <div class="card" style="margin-bottom:var(--space-5)">
+          <div class="section-title">New Scan</div>
+          <p style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:var(--space-4)">
+            Enter the IP address of a lab VM. VulnSense will check open ports, web security,
+            SSL configuration, service misconfigurations, and common admin paths — then classify
+            each finding using the AI model.
+          </p>
+          <div class="scan-form">
+            <div class="scan-input-wrap">
+              <label for="scanTarget">Target IP Address</label>
+              <input type="text" id="scanTarget" class="scan-input" placeholder="e.g. 192.168.56.101" data-testid="input-scan-target">
+            </div>
+            <button class="btn-scan" id="scanBtn" onclick="runScan()" data-testid="button-run-scan">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Run Scan
+            </button>
+          </div>
+
+          <!-- Live progress feed -->
+          <div id="scanProgress" class="hidden" style="margin-top:var(--space-4)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div class="pulse-dot"></div>
+              <span id="scanProgressMsg" style="font-size:var(--text-sm);color:var(--text-muted)">Starting…</span>
+              <span id="scanProgressPct" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--cyan);margin-left:auto">0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="scanProgressBar" style="width:0%;background:var(--cyan)"></div></div>
+            <div id="scanProgressLog" style="margin-top:8px;font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-faint);max-height:80px;overflow-y:auto"></div>
+          </div>
+
+          <!-- Result summary -->
+          <div id="scanSummary" class="hidden" style="margin-top:var(--space-5)">
+            <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-4)">
+              <div class="kpi-card kpi-high" style="flex:1;min-width:90px"><div class="kpi-label">High</div><div class="kpi-value" id="sumHigh">0</div></div>
+              <div class="kpi-card kpi-med"  style="flex:1;min-width:90px"><div class="kpi-label">Medium</div><div class="kpi-value" id="sumMed">0</div></div>
+              <div class="kpi-card kpi-low"  style="flex:1;min-width:90px"><div class="kpi-label">Low</div><div class="kpi-value" id="sumLow">0</div></div>
+              <div class="kpi-card" style="flex:1;min-width:90px"><div class="kpi-label">Total</div><div class="kpi-value" id="sumTotal">0</div></div>
+            </div>
+            <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+              <button class="btn-scan" style="background:var(--surface-3);color:var(--text)" onclick="downloadPDF()" data-testid="button-download-pdf">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                PDF Report
+              </button>
+              <button class="btn-scan" style="background:var(--surface-3);color:var(--text)" onclick="downloadText()" data-testid="button-download-txt">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16h16V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Text Report
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">Scan Results</div>
+        <div class="card"><div id="scanResultsArea"><div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>Enter a target IP and click Run Scan.</p></div></div></div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════
+           FINDINGS
+      ════════════════════════════════════════════════════════ -->
+      <div id="page-findings" class="hidden">
+        <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap">
+          <select id="findingsScanFilter" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-family:var(--font-mono);font-size:var(--text-sm)" onchange="loadFindingsForScan(this.value)" data-testid="select-scan-filter">
+            <option value="">Select a scan…</option>
+          </select>
+          <select id="riskFilter" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:var(--text-sm)" onchange="filterFindings()" data-testid="select-risk-filter">
+            <option value="">All risk levels</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <select id="remFilter" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:var(--text-sm)" onchange="filterFindings()" data-testid="select-rem-filter">
+            <option value="">All statuses</option>
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="fixed">Fixed</option>
+            <option value="accepted_risk">Accepted Risk</option>
+          </select>
+        </div>
+        <div class="card"><div id="allFindingsArea"><div class="empty-state"><p>Select a scan above.</p></div></div></div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════
+           REMEDIATION TRACKER
+      ════════════════════════════════════════════════════════ -->
+      <div id="page-remediation" class="hidden">
+        <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-4)">
+          <select id="remScanFilter" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-family:var(--font-mono);font-size:var(--text-sm)" onchange="loadRemediationFindings(this.value)">
+            <option value="">Select a scan to manage…</option>
+          </select>
+        </div>
+        <div class="card"><div id="remArea"><div class="empty-state"><p>Select a scan to manage remediation.</p></div></div></div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════
+           SCAN HISTORY
+      ════════════════════════════════════════════════════════ -->
+      <div id="page-history" class="hidden">
+        <div class="card"><div id="historyList"><div class="empty-state"><p>No scans yet.</p></div></div></div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════
+           ML EVALUATION
+      ════════════════════════════════════════════════════════ -->
+      <div id="page-mlreport" class="hidden">
+        <!-- Model comparison tabs -->
+        <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4)">
+          <button class="btn-scan" id="tabDT" onclick="showModelTab('dt')" style="background:var(--cyan);font-size:var(--text-xs)">Decision Tree</button>
+          <button class="btn-scan" id="tabRF" onclick="showModelTab('rf')" style="background:var(--surface-3);color:var(--text);font-size:var(--text-xs)">Random Forest</button>
+        </div>
+
+        <div class="two-col" style="margin-bottom:var(--space-5)">
+          <div class="card">
+            <div class="section-title">Model Performance (Test Set) — <span id="activeModelName">Decision Tree</span></div>
+            <div id="mlMetrics"><div class="empty-state"><p>Loading…</p></div></div>
+          </div>
+          <div class="card">
+            <div class="section-title">Baseline Comparison</div>
+            <div id="mlBaseline"></div>
+          </div>
+        </div>
+
+        <div class="two-col" style="margin-bottom:var(--space-5)">
+          <div class="card">
+            <div class="section-title">Per-Class Results</div>
+            <div id="mlPerClass"></div>
+          </div>
+          <div class="card">
+            <div class="section-title">Feature Importances — <span id="activeFeatName">Decision Tree</span></div>
+            <div id="mlFeatures"></div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="section-title">Confusion Matrix — <span id="activeCMName">Decision Tree</span></div>
+            <img id="cmImage" src="/api/models/confusion_matrix_dt.png" alt="Confusion Matrix"
+                 style="max-width:380px;border-radius:var(--radius);border:1px solid var(--border)">
+          </div>
+          <div class="card">
+            <div class="section-title">How to Interpret</div>
+            <div style="font-size:var(--text-sm);color:var(--text-muted);line-height:1.8">
+              <p><strong style="color:var(--text)">Weighted F1</strong> is the primary metric because the three classes are imbalanced. It balances precision and recall across all classes.</p>
+              <p style="margin-top:8px"><strong style="color:var(--text)">Random Forest vs Decision Tree:</strong> RF achieves higher F1 by averaging many trees (reduces variance). DT is more interpretable — you can trace a single path from root to leaf.</p>
+              <p style="margin-top:8px"><strong style="color:var(--text)">Baseline outperforms</strong> on synthetic data because labels were partly derived from the CVSS score. This is expected and is discussed as a limitation.</p>
+              <p style="margin-top:8px"><strong style="color:var(--text)">Low-class F1 is lower</strong> because there are far fewer Low samples. <code>class_weight="balanced"</code> helps but can't fully compensate.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </main>
+</div>
+
+<!-- ═══ FINDING DETAIL MODAL ═══════════════════════════════════ -->
+<div class="modal-overlay" id="findingModal" onclick="if(event.target===this)closeFindingModal()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div><div class="modal-title" id="modalTitle">Finding</div><div id="modalBadge" style="margin-top:4px"></div></div>
+      <button class="modal-close" onclick="closeFindingModal()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta" id="modalMeta"></div>
+
+      <div class="section-title" style="margin-bottom:6px">AI Risk Explanation</div>
+      <div id="modalExplanation" style="background:var(--surface-2);border-radius:var(--radius);padding:var(--space-4);border:1px solid var(--border-subtle);font-size:var(--text-sm);color:var(--text-muted);line-height:1.7"></div>
+
+      <!-- Confidence -->
+      <div style="margin-top:var(--space-4)">
+        <div class="section-title" style="margin-bottom:6px">Model Confidence</div>
+        <div class="conf-bar">
+          <div class="conf-track"><div class="conf-fill" id="modalConfFill"></div></div>
+          <span class="mono text-cyan" id="modalConfPct"></span>
+        </div>
+        <div id="modalUncertainWarn" class="hidden" style="margin-top:8px;font-size:var(--text-xs);color:var(--risk-medium);background:var(--risk-medium-bg);border:1px solid rgba(227,179,65,0.3);border-radius:var(--radius);padding:8px 10px">
+          ⚠ Low confidence — manual review recommended. This finding sits near a classification boundary.
+        </div>
+      </div>
+
+      <!-- Feature contributions -->
+      <div style="margin-top:var(--space-4)" id="modalContribs"></div>
+
+      <!-- CVEs -->
+      <div style="margin-top:var(--space-4)" id="modalCVEs"></div>
+
+      <!-- Remediation status selector -->
+      <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border)">
+        <div class="section-title" style="margin-bottom:8px">Remediation Status</div>
+        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
+          <select id="modalRemStatus" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;color:var(--text);font-size:var(--text-sm)">
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="fixed">Fixed</option>
+            <option value="accepted_risk">Accepted Risk</option>
+          </select>
+          <input type="text" id="modalRemNote" placeholder="Optional note…"
+                 style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;color:var(--text);font-size:var(--text-sm)">
+          <button class="btn-scan" style="font-size:var(--text-xs)" onclick="saveRemediation()" data-testid="button-save-remediation">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ── Auth guard ─────────────────────────────────────────────────
+const token  = sessionStorage.getItem('vs_token');
+const vsUser = sessionStorage.getItem('vs_user') || 'analyst';
+const vsRole = sessionStorage.getItem('vs_role') || 'analyst';
+if (!token) window.location.href = '/';
+document.getElementById('sidebarUser').textContent = vsUser;
+document.getElementById('sidebarRole').textContent = vsRole;
+
+// Live clock
+setInterval(() => {
+  document.getElementById('topbarTime').textContent =
+    new Date().toUTCString().replace('GMT','UTC');
+}, 1000);
+
+// ── API helper ─────────────────────────────────────────────────
+async function api(path, opts={}) {
+  const res = await fetch(path, {
+    ...opts,
+    headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}`, ...(opts.headers||{}) }
+  });
+  if (res.status === 401) { sessionStorage.clear(); window.location.href='/'; }
+  const ct = res.headers.get('content-type')||'';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+
+// ── Toast ──────────────────────────────────────────────────────
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ── Page router ────────────────────────────────────────────────
+const PAGES = ['overview','scanner','findings','remediation','history','mlreport'];
+const TITLES = { overview:'Overview', scanner:'Scanner', findings:'Findings',
+                 remediation:'Remediation Tracker', history:'Scan History', mlreport:'ML Evaluation' };
+
+function showPage(name) {
+  PAGES.forEach(p => document.getElementById(`page-${p}`).classList.toggle('hidden', p!==name));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  event?.currentTarget?.classList?.add('active');
+  document.getElementById('topbarTitle').textContent = TITLES[name]||name;
+  if (name==='history')     loadHistory();
+  if (name==='mlreport')    loadMLReport();
+  if (name==='findings')    loadScanSelect('findingsScanFilter');
+  if (name==='remediation') { loadScanSelect('remScanFilter'); }
+}
+
+// ── Overview ───────────────────────────────────────────────────
+let chartRisk=null, chartHost=null, chartTimeline=null;
+
+async function loadOverview() {
+  const s = await api('/api/dashboard/stats');
+  ['high','med','low','total','scans'].forEach(k => {
+    const el = document.getElementById(`kpi-${k}`);
+    if (!el) return;
+    const val = k==='high'?s.high : k==='med'?s.medium : k==='low'?s.low :
+                k==='total'?s.total_findings : s.total_scans;
+    animateCount(el, val||0);
+  });
+  buildRiskChart(s);
+  buildHostChart(s);
+  buildTimelineChart(s);
+  buildRemProgress(s);
+}
+
+function animateCount(el, target) {
+  let n=0; const step=Math.max(1,Math.ceil(target/30));
+  const iv = setInterval(()=>{ n=Math.min(n+step,target); el.textContent=n; if(n>=target)clearInterval(iv); },30);
+}
+
+const CHART_BASE = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{ labels:{ color:'#8b949e', font:{family:'DM Sans'} } } }
+};
+
+function buildRiskChart(s) {
+  const ctx = document.getElementById('chartRisk').getContext('2d');
+  if (chartRisk) chartRisk.destroy();
+  chartRisk = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels:['High','Medium','Low'],
+           datasets:[{ data:[s.high,s.medium,s.low],
+             backgroundColor:['rgba(248,81,73,.8)','rgba(227,179,65,.8)','rgba(63,185,80,.8)'],
+             borderColor:['#f85149','#e3b341','#3fb950'], borderWidth:1 }] },
+    options:{ ...CHART_BASE, cutout:'65%',
+      plugins:{ ...CHART_BASE.plugins, legend:{position:'bottom',labels:{color:'#8b949e',padding:12}} } }
+  });
+}
+
+function buildHostChart(s) {
+  const ctx = document.getElementById('chartHost').getContext('2d');
+  if (chartHost) chartHost.destroy();
+  const map={};
+  (s.recent_by_host||[]).forEach(r=>{ map[r.host]=(map[r.host]||0)+r.cnt; });
+  const hosts=Object.keys(map).slice(0,6);
+  chartHost = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:hosts, datasets:[{ label:'Findings', data:hosts.map(h=>map[h]),
+      backgroundColor:'rgba(57,208,216,.6)', borderColor:'#39d0d8', borderWidth:1, borderRadius:4 }] },
+    options:{ ...CHART_BASE,
+      scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}},
+               y:{ticks:{color:'#8b949e',stepSize:1},grid:{color:'#21262d'}} },
+      plugins:{ ...CHART_BASE.plugins, legend:{display:false} } }
+  });
+}
+
+function buildTimelineChart(s) {
+  const ctx = document.getElementById('chartTimeline').getContext('2d');
+  if (chartTimeline) chartTimeline.destroy();
+  const tl = (s.timeline||[]);
+  const labels = tl.map((_,i)=>`Scan ${i+1}`);
+  chartTimeline = new Chart(ctx, {
+    type:'line',
+    data:{ labels,
+      datasets:[
+        { label:'High',   data:tl.map(r=>r.high),   borderColor:'#f85149', backgroundColor:'rgba(248,81,73,.1)',  tension:.4, fill:true },
+        { label:'Medium', data:tl.map(r=>r.medium), borderColor:'#e3b341', backgroundColor:'rgba(227,179,65,.1)', tension:.4, fill:true },
+        { label:'Low',    data:tl.map(r=>r.low),    borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,.1)',  tension:.4, fill:true },
+      ]},
+    options:{ ...CHART_BASE,
+      scales:{ x:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}},
+               y:{ticks:{color:'#8b949e',stepSize:1},grid:{color:'#21262d'}} } }
+  });
+}
+
+function buildRemProgress(s) {
+  const rem = s.remediation||{};
+  const total = Object.values(rem).reduce((a,b)=>a+b,0);
+  if (!total) return;
+  const fixed = rem.fixed||0;
+  const pct   = Math.round((fixed/total)*100);
+  const items = [
+    {key:'open',        label:'Open',          color:'var(--risk-high)'},
+    {key:'in_progress', label:'In Progress',   color:'var(--risk-medium)'},
+    {key:'fixed',       label:'Fixed',         color:'var(--risk-low)'},
+    {key:'accepted_risk',label:'Accepted Risk',color:'var(--text-muted)'},
+  ];
+  document.getElementById('remProgress').innerHTML = `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--text-muted);margin-bottom:4px">
+        <span>Overall remediation</span><span class="mono text-cyan">${pct}%</span>
+      </div>
+      <div class="progress-bar" style="height:8px"><div class="progress-fill" style="width:${pct}%;background:var(--risk-low)"></div></div>
+    </div>
+    ${items.map(i=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border-subtle)">
+        <span style="font-size:var(--text-sm);color:${i.color}">${i.label}</span>
+        <span class="mono" style="font-size:var(--text-sm)">${rem[i.key]||0}</span>
+      </div>`).join('')}`;
+}
+
+// ── Scanner ────────────────────────────────────────────────────
+let lastScanId = null;
+
+async function runScan() {
+  const host = document.getElementById('scanTarget').value.trim();
+  if (!host) { toast('Enter a target IP address.','error'); return; }
+  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) { toast('Enter a valid IPv4 address.','error'); return; }
+
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  document.getElementById('scanSummary').classList.add('hidden');
+  document.getElementById('scanResultsArea').innerHTML = '';
+  document.getElementById('scanProgress').classList.remove('hidden');
+  document.getElementById('scanProgressBar').style.width = '0%';
+  document.getElementById('scanProgressLog').innerHTML = '';
+
+  // Start the scan — backend returns a scan_id immediately
+  const start = await api('/api/scan/run', { method:'POST', body:JSON.stringify({host}) });
+  if (start.error) { toast(start.error,'error'); btn.disabled=false; return; }
+
+  lastScanId = start.scan_id;
+
+  // Subscribe to live progress via SSE
+  const es = new EventSource(`/api/scan/stream/${lastScanId}`, {
+    headers: {} // SSE doesn't support custom headers; token guard handled by scan thread
+  });
+  // Note: SSE auth — in production you'd pass token as query param.
+  // For this lab build the stream endpoint trusts the session from the scan init.
+
+  es.onmessage = (e) => {
+    if (e.data === '[DONE]') { es.close(); btn.disabled=false; return; }
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+
+    if (msg.error) { toast(msg.error,'error'); btn.disabled=false; es.close(); return; }
+
+    if (msg.pct !== undefined) {
+      document.getElementById('scanProgressBar').style.width = msg.pct+'%';
+      document.getElementById('scanProgressPct').textContent = msg.pct+'%';
+    }
+    if (msg.message) {
+      document.getElementById('scanProgressMsg').textContent = msg.message;
+      const log = document.getElementById('scanProgressLog');
+      log.innerHTML += `<div>> ${msg.message}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // Final result payload
+    if (msg.findings) {
+      document.getElementById('scanProgress').classList.add('hidden');
+      document.getElementById('sumHigh').textContent  = msg.summary.High||0;
+      document.getElementById('sumMed').textContent   = msg.summary.Medium||0;
+      document.getElementById('sumLow').textContent   = msg.summary.Low||0;
+      document.getElementById('sumTotal').textContent = msg.total||0;
+      document.getElementById('scanSummary').classList.remove('hidden');
+      window._lastFindings = msg.findings;
+      renderFindingsTable(msg.findings, document.getElementById('scanResultsArea'));
+      toast(`Scan complete — ${msg.total} findings on ${host}`, 'success');
+      loadOverview();
+    }
+  };
+
+  es.onerror = () => {
+    // SSE failed — fall back to polling
+    es.close();
+    pollScanResult(lastScanId, btn);
+  };
+}
+
+// Polling fallback if SSE is unavailable
+async function pollScanResult(scanId, btn) {
+  for (let i=0; i<60; i++) {
+    await new Promise(r=>setTimeout(r,3000));
+    const res = await api(`/api/scan/result/${scanId}`);
+    if (res.status === 'complete') {
+      document.getElementById('scanProgress').classList.add('hidden');
+      document.getElementById('sumHigh').textContent  = res.summary.High||0;
+      document.getElementById('sumMed').textContent   = res.summary.Medium||0;
+      document.getElementById('sumLow').textContent   = res.summary.Low||0;
+      document.getElementById('sumTotal').textContent = res.total||0;
+      document.getElementById('scanSummary').classList.remove('hidden');
+      window._lastFindings = res.findings;
+      renderFindingsTable(res.findings, document.getElementById('scanResultsArea'));
+      toast('Scan complete.','success');
+      loadOverview();
+      btn.disabled = false;
+      return;
+    }
+  }
+  toast('Scan timed out.','error');
+  btn.disabled = false;
+}
+
+async function downloadPDF() {
+  if (!lastScanId) return;
+  const res = await fetch(`/api/report/${lastScanId}/pdf`, { headers:{'Authorization':`Bearer ${token}`} });
+  const blob = await res.blob();
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`vulnsense_${lastScanId}.pdf`; a.click();
+}
+
+async function downloadText() {
+  if (!lastScanId) return;
+  const res = await fetch(`/api/report/${lastScanId}`, { headers:{'Authorization':`Bearer ${token}`} });
+  const blob = await res.blob();
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`vulnsense_${lastScanId}.txt`; a.click();
+}
+
+// ── Findings table ─────────────────────────────────────────────
+function badge(label) {
+  const cls = label==='High'?'badge-high':label==='Medium'?'badge-medium':label==='Low'?'badge-low':'badge-unknown';
+  return `<span class="badge ${cls}">${label||'—'}</span>`;
+}
+
+function remBadge(status) {
+  const map = { open:'color:var(--risk-high)', in_progress:'color:var(--risk-medium)',
+                fixed:'color:var(--risk-low)', accepted_risk:'color:var(--text-muted)' };
+  const labels = { open:'Open', in_progress:'In Progress', fixed:'Fixed', accepted_risk:'Accepted' };
+  return `<span style="font-size:var(--text-xs);${map[status]||''}">${labels[status]||status||'open'}</span>`;
+}
+
+function confBar(c) {
+  const pct=Math.round((c||0)*100);
+  return `<div class="conf-bar"><div class="conf-track"><div class="conf-fill" style="width:${pct}%"></div></div><span class="mono" style="font-size:10px;min-width:30px;text-align:right;color:var(--text-muted)">${pct}%</span></div>`;
+}
+
+function renderFindingsTable(findings, container) {
+  if (!findings||!findings.length) {
+    container.innerHTML='<div class="empty-state"><p>No findings.</p></div>'; return;
+  }
+  const rows = findings.map((f,i)=>`
+    <tr onclick="openFinding(${i})" data-testid="finding-row-${i}" style="cursor:pointer">
+      <td>${badge(f.risk_label||f.label)} ${f.uncertain?'<span style="color:var(--risk-medium);font-size:10px">⚠</span>':''}</td>
+      <td class="muted">${f.port||'—'}/${f.protocol||'tcp'}</td>
+      <td><strong>${(f.service||'').toUpperCase()}</strong></td>
+      <td class="muted" style="font-size:var(--text-xs)">${(f.vuln_type||'').replace(/_/g,' ')}</td>
+      <td class="muted" style="font-size:var(--text-xs);font-family:var(--font-mono)">${f.host||'—'}</td>
+      <td style="min-width:110px">${confBar(f.confidence)}</td>
+      <td>${remBadge(f.remediation_status)}</td>
+    </tr>`).join('');
+  container.innerHTML=`
+    <div class="table-wrap"><table>
+      <thead><tr><th>Risk</th><th>Port</th><th>Service</th><th>Type</th><th>Host</th><th>Confidence</th><th>Status</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+// ── Finding modal ──────────────────────────────────────────────
+let _modalFindingId = null;
+
+function openFinding(idx) {
+  const f = (window._lastFindings||[])[idx];
+  if (!f) return;
+  _modalFindingId = f.finding_id || f.finding_id;
+  const label = f.risk_label||f.label||'Unknown';
+
+  document.getElementById('modalTitle').textContent  = `${(f.service||'?').toUpperCase()} — Port ${f.port}`;
+  document.getElementById('modalBadge').innerHTML    = badge(label);
+  document.getElementById('modalExplanation').innerHTML = f.explanation||'No explanation.';
+
+  const pct = Math.round((f.confidence||0)*100);
+  document.getElementById('modalConfFill').style.width = pct+'%';
+  document.getElementById('modalConfPct').textContent  = pct+'%';
+  document.getElementById('modalUncertainWarn').classList.toggle('hidden', !f.uncertain);
+
+  // Meta grid
+  const meta = [
+    {label:'Host',       value:f.host||'—'},
+    {label:'Port',       value:`${f.port}/${f.protocol}`},
+    {label:'Service',    value:(f.service||'—').toUpperCase()},
+    {label:'Vuln Type',  value:(f.vuln_type||'—').replace(/_/g,' ')},
+    {label:'Encrypted',  value:f.encrypted?'Yes':'No'},
+    {label:'Default Creds',value:f.uses_default_creds?'⚠ Yes':'No'},
+  ];
+  document.getElementById('modalMeta').innerHTML = meta.map(m=>
+    `<div class="modal-meta-item"><div class="modal-meta-label">${m.label}</div><div class="modal-meta-value">${m.value}</div></div>`
+  ).join('');
+
+  // Feature contributions
+  const contribs = f.contributions||[];
+  document.getElementById('modalContribs').innerHTML = contribs.length ? `
+    <div class="section-title" style="margin-bottom:6px">Feature Contributions</div>
+    <div style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:6px">
+      Which features pushed this classification the most:
+    </div>
+    ${contribs.map(c=>{
+      const pct=Math.round(c.score*400);
+      return `<div class="metric-row" style="margin-bottom:3px">
+        <div class="metric-name" style="font-size:var(--text-xs);min-width:140px;font-family:var(--font-mono)">${c.label}</div>
+        <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.min(pct,100)}%;background:var(--cyan)"></div></div>
+        <div style="font-size:10px;color:var(--text-muted);min-width:50px;text-align:right;font-family:var(--font-mono)">${c.value}</div>
+      </div>`;
+    }).join('')}` : '';
+
+  // CVEs
+  const cves = f.cves||[];
+  document.getElementById('modalCVEs').innerHTML = cves.length ? `
+    <div class="section-title" style="margin-bottom:6px">Related CVEs</div>
+    ${cves.map(c=>`
+      <div style="padding:8px 10px;background:var(--surface-2);border-radius:var(--radius);border:1px solid var(--border-subtle);margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+          <a href="${c.url}" target="_blank" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--cyan)">${c.id}</a>
+          <span style="font-size:10px;color:${c.severity==='CRITICAL'||c.severity==='HIGH'?'var(--risk-high)':c.severity==='MEDIUM'?'var(--risk-medium)':'var(--text-muted)'}">${c.severity||'N/A'}${c.score?' ('+c.score+')':''}</span>
+        </div>
+        <div style="font-size:var(--text-xs);color:var(--text-muted)">${c.description}</div>
+      </div>`).join('')}` : '';
+
+  // Remediation status
+  document.getElementById('modalRemStatus').value = f.remediation_status||'open';
+  document.getElementById('modalRemNote').value   = f.remediation_note||'';
+
+  document.getElementById('findingModal').classList.add('visible');
+}
+
+function closeFindingModal() { document.getElementById('findingModal').classList.remove('visible'); }
+
+async function saveRemediation() {
+  if (!_modalFindingId) return;
+  const status = document.getElementById('modalRemStatus').value;
+  const note   = document.getElementById('modalRemNote').value;
+  await api(`/api/findings/${_modalFindingId}/remediation`, {
+    method:'PATCH', body:JSON.stringify({status,note})
+  });
+  toast('Remediation status saved.','success');
+  closeFindingModal();
+  loadOverview();
+}
+
+// ── Scan history ───────────────────────────────────────────────
+async function loadHistory() {
+  const scans = await api('/api/scans');
+  const el = document.getElementById('historyList');
+  if (!scans.length) { el.innerHTML='<div class="empty-state"><p>No scans yet.</p></div>'; return; }
+  el.innerHTML = scans.map(s=>`
+    <div class="history-item" onclick="openHistoryScan('${s.scan_id}')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div style="flex:1">
+        <div class="history-host">${s.host}</div>
+        <div class="history-scan-id">${s.scan_id} · ${(s.started_at||'').slice(0,19).replace('T',' ')} UTC</div>
+      </div>
+      <span class="badge badge-high" style="font-size:10px">${s.total_open||0} findings</span>
+      <span style="font-size:var(--text-xs);color:var(--text-faint)">${s.status}</span>
+    </div>`).join('');
+}
+
+async function openHistoryScan(scanId) {
+  showPage('findings');
+  await loadScanSelect('findingsScanFilter', scanId);
+  await loadFindingsForScan(scanId);
+}
+
+// ── Findings page ──────────────────────────────────────────────
+let _allFindings = [];
+
+async function loadScanSelect(elId, selectVal) {
+  const sel = document.getElementById(elId);
+  if (!sel) return;
+  const scans = await api('/api/scans');
+  sel.innerHTML = `<option value="">Select a scan…</option>` +
+    scans.map(s=>`<option value="${s.scan_id}" ${s.scan_id===selectVal?'selected':''}>
+      ${s.host} — ${s.scan_id}</option>`).join('');
+  if (selectVal) {
+    if (elId==='findingsScanFilter') loadFindingsForScan(selectVal);
+    if (elId==='remScanFilter')      loadRemediationFindings(selectVal);
+  }
+}
+
+async function loadFindingsForScan(scanId) {
+  if (!scanId) return;
+  const area = document.getElementById('allFindingsArea');
+  area.innerHTML='<div class="empty-state"><p>Loading…</p></div>';
+  _allFindings = await api(`/api/scans/${scanId}/findings`);
+  window._lastFindings = _allFindings;
+  filterFindings();
+}
+
+function filterFindings() {
+  const risk = document.getElementById('riskFilter').value;
+  const rem  = document.getElementById('remFilter').value;
+  const filtered = _allFindings.filter(f=>
+    (!risk || f.risk_label===risk) &&
+    (!rem  || (f.remediation_status||'open')===rem)
+  );
+  window._lastFindings = filtered;
+  renderFindingsTable(filtered, document.getElementById('allFindingsArea'));
+}
+
+// ── Remediation page ───────────────────────────────────────────
+async function loadRemediationFindings(scanId) {
+  if (!scanId) return;
+  const findings = await api(`/api/scans/${scanId}/findings`);
+  window._lastFindings = findings;
+  const el = document.getElementById('remArea');
+  if (!findings.length) { el.innerHTML='<div class="empty-state"><p>No findings.</p></div>'; return; }
+
+  // Group by remediation status
+  const groups = { open:[], in_progress:[], fixed:[], accepted_risk:[] };
+  findings.forEach(f=>{ const s=f.remediation_status||'open'; if(groups[s])groups[s].push(f); });
+
+  const labels = { open:'Open', in_progress:'In Progress', fixed:'Fixed', accepted_risk:'Accepted Risk' };
+  const colors = { open:'var(--risk-high)', in_progress:'var(--risk-medium)',
+                   fixed:'var(--risk-low)', accepted_risk:'var(--text-muted)' };
+
+  el.innerHTML = Object.entries(groups).map(([status,items])=>`
+    <div style="margin-bottom:var(--space-5)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:${colors[status]}">${labels[status]}</span>
+        <span style="font-size:var(--text-xs);color:var(--text-faint)">(${items.length})</span>
+      </div>
+      ${items.length===0?'<div style="font-size:var(--text-xs);color:var(--text-faint);padding:8px 0">None</div>':
+        items.map((f,i)=>`
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--surface-2);border-radius:var(--radius);border:1px solid var(--border-subtle);margin-bottom:6px">
+            ${badge(f.risk_label)}
+            <div style="flex:1">
+              <div style="font-size:var(--text-sm);font-weight:600">${(f.service||'').toUpperCase()} — Port ${f.port}</div>
+              <div style="font-size:var(--text-xs);color:var(--text-muted)">${(f.vuln_type||'').replace(/_/g,' ')}</div>
+              ${f.remediation_note?`<div style="font-size:var(--text-xs);color:var(--cyan);margin-top:2px">Note: ${f.remediation_note}</div>`:''}
+            </div>
+            <select onchange="quickUpdateRem('${f.finding_id}',this.value)"
+                    style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;color:var(--text);font-size:var(--text-xs)">
+              ${['open','in_progress','fixed','accepted_risk'].map(s=>
+                `<option value="${s}" ${s===status?'selected':''}>${labels[s]}</option>`).join('')}
+            </select>
+          </div>`).join('')}
+    </div>`).join('');
+}
+
+async function quickUpdateRem(findingId, status) {
+  await api(`/api/findings/${findingId}/remediation`, { method:'PATCH', body:JSON.stringify({status}) });
+  toast('Updated.','success');
+  // Reload the current remediation scan
+  const sel = document.getElementById('remScanFilter');
+  if (sel.value) loadRemediationFindings(sel.value);
+  loadOverview();
+}
+
+// ── ML Evaluation ──────────────────────────────────────────────
+let _mlReport=null, _mlFeats=null;
+
+async function loadMLReport() {
+  if (_mlReport) { renderMLTab(_currentTab||'dt'); return; }
+  [_mlReport, _mlFeats] = await Promise.all([api('/api/ml/report'), api('/api/ml/features')]);
+  renderMLTab('dt');
+  renderMLBaseline();
+}
+
+let _currentTab = 'dt';
+
+function showModelTab(tab) {
+  _currentTab = tab;
+  document.getElementById('tabDT').style.background = tab==='dt'?'var(--cyan)':'var(--surface-3)';
+  document.getElementById('tabDT').style.color       = tab==='dt'?'#0d1117':'var(--text)';
+  document.getElementById('tabRF').style.background = tab==='rf'?'var(--cyan)':'var(--surface-3)';
+  document.getElementById('tabRF').style.color       = tab==='rf'?'#0d1117':'var(--text)';
+  renderMLTab(tab);
+}
+
+function renderMLTab(tab) {
+  if (!_mlReport) return;
+  const name = tab==='rf'?'Random Forest':'Decision Tree';
+  const data = (_mlReport.models||{})[name] || _mlReport;
+  document.getElementById('activeModelName').textContent = name;
+  document.getElementById('activeFeatName').textContent  = name;
+  document.getElementById('activeCMName').textContent    = name;
+  document.getElementById('cmImage').src = `/api/models/confusion_matrix_${tab}.png?t=${Date.now()}`;
+
+  // Metrics bars
+  const metrics = [
+    {name:'Accuracy',  val:data.accuracy},
+    {name:'Precision', val:data.precision},
+    {name:'Recall',    val:data.recall},
+    {name:'F1 Score',  val:data.f1},
+    {name:'CV F1',     val:data.cv_f1},
+  ];
+  document.getElementById('mlMetrics').innerHTML = metrics.map(m=>`
+    <div class="metric-row">
+      <div class="metric-name">${m.name}</div>
+      <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.round((m.val||0)*100)}%"></div></div>
+      <div class="metric-value">${((m.val||0)*100).toFixed(1)}%</div>
+    </div>`).join('');
+
+  // Per-class
+  const pc = data.per_class||{};
+  document.getElementById('mlPerClass').innerHTML = ['High','Medium','Low'].map(lbl=>{
+    const c=pc[lbl]||{};
+    const cls=lbl==='High'?'text-high':lbl==='Medium'?'text-medium':'text-low';
+    return `<div style="margin-bottom:var(--space-4)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <strong class="${cls}">${lbl}</strong>
+        <span style="font-size:var(--text-xs);color:var(--text-muted)">n=${c.support||0}</span>
+      </div>
+      ${['precision','recall','f1'].map(m=>`
+        <div class="metric-row" style="margin-bottom:3px">
+          <div class="metric-name" style="font-size:var(--text-xs);min-width:80px">${m}</div>
+          <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.round((c[m]||0)*100)}%"></div></div>
+          <div class="metric-value">${((c[m]||0)*100).toFixed(1)}%</div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+
+  // Feature importances
+  const feats = ((_mlFeats||{})[name]||[]).slice(0,10);
+  const maxImp = feats[0]?.[1]||1;
+  document.getElementById('mlFeatures').innerHTML = feats.map(([n,v])=>`
+    <div class="metric-row" style="margin-bottom:3px">
+      <div class="metric-name" style="font-size:var(--text-xs);min-width:130px;font-family:var(--font-mono)">${n}</div>
+      <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.round((v/maxImp)*100)}%;background:var(--cyan)"></div></div>
+      <div class="metric-value">${(v*100).toFixed(1)}%</div>
+    </div>`).join('');
+}
+
+function renderMLBaseline() {
+  const bl = (_mlReport||{}).baseline||{};
+  document.getElementById('mlBaseline').innerHTML = `
+    <div style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:12px">${bl.description||''}</div>
+    ${['accuracy','f1'].map(m=>`
+      <div class="metric-row">
+        <div class="metric-name">${m==='f1'?'F1 Score':'Accuracy'}</div>
+        <div class="metric-bar"><div class="metric-bar-fill" style="width:${Math.round((bl[m]||0)*100)}%;background:var(--risk-medium)"></div></div>
+        <div class="metric-value">${((bl[m]||0)*100).toFixed(1)}%</div>
+      </div>`).join('')}
+    <div style="margin-top:12px;padding:10px;background:var(--surface-2);border-radius:var(--radius);font-size:var(--text-xs);color:var(--text-muted)">
+      <strong style="color:var(--text)">Why does the baseline score higher?</strong><br>
+      Labels were partly derived from the CVSS score used in the baseline rule.
+      The AI model adds value by capturing <em>contextual signals</em> — attack vector,
+      privilege requirements, service type — that a single threshold cannot.
+      This is a known limitation discussed in the report.
+    </div>`;
+}
+
+// ── Keyboard ───────────────────────────────────────────────────
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeFindingModal(); });
+
+// ── Init ───────────────────────────────────────────────────────
+loadOverview();
+</script>
+</body>
+</html>
