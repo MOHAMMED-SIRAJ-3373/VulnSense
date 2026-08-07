@@ -406,7 +406,15 @@ def cm_image():
 @api.route("/models/<filename>")
 def model_image(filename):
     from flask import send_file
-    p = os.path.join(ROOT, "models", filename)
-    if os.path.exists(p) and filename.endswith(".png"):
+    from werkzeug.utils import secure_filename
+
+    # 🛡️ Sentinel: Fix path traversal vulnerability
+    # Using secure_filename prevents attackers from using ../ to read arbitrary files
+    safe_filename = secure_filename(filename)
+    if not safe_filename:
+        return ("Invalid filename", 400)
+
+    p = os.path.join(ROOT, "models", safe_filename)
+    if os.path.exists(p) and safe_filename.endswith(".png"):
         return send_file(p, mimetype="image/png")
     return ("Not found", 404)
