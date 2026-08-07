@@ -25,7 +25,9 @@ app = Flask(
     static_folder=os.path.join(ROOT, "frontend", "static"),
     template_folder=os.path.join(ROOT, "frontend", "templates"),
 )
-app.secret_key = os.environ.get("VULNSENSE_SECRET", "vulnsense-dev-secret-changeme")
+
+# 🛡️ Sentinel: Removed hardcoded secret fallback and use a secure random generator
+app.secret_key = os.environ.get("VULNSENSE_SECRET") or os.urandom(32).hex()
 
 # CORS for local dev (frontend on a different port during development)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
