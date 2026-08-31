@@ -42,7 +42,7 @@ VULNERABLE_VERSIONS = {
 
 def _request(url, timeout=6):
     try:
-        return requests.get(url, timeout=timeout, verify=False, allow_redirects=True,
+        return requests.get(url, timeout=timeout, allow_redirects=True,
                             headers={"User-Agent": "VulnSense/1.0 (Lab Scanner)"})
     except Exception:
         return None
@@ -199,7 +199,7 @@ def check_web(host: str, scan_id: str = None) -> list:
             try:
                 r = requests.get(
                     f"{scheme}://{host}:{port}{path}",
-                    timeout=4, verify=False, allow_redirects=False,
+                    timeout=4, allow_redirects=False,
                     headers={"User-Agent": "VulnSense/1.0"}
                 )
                 if r.status_code in (200, 301, 302, 403):
