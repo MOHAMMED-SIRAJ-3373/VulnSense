@@ -8,6 +8,7 @@ common admin panel exposure, open directory listing detection.
 
 import ssl, socket, requests, urllib3, re
 from datetime import datetime
+from urllib.parse import urlparse, urlunparse
 
 urllib3.disable_warnings()
 
@@ -38,6 +39,34 @@ VULNERABLE_VERSIONS = {
     "iis/6":       ("IIS 6.0 is end-of-life with multiple CVEs.", "HIGH"),
     "iis/7.0":     ("IIS 7.0 is outdated.", "MEDIUM"),
 }
+
+
+def build_validated_url(
+    scheme: str,
+    host: str,
+    port: int,
+    path: str = "/",
+) -> str:
+    try:
+        base_url = f"{scheme}://{host}:{port}{path}"
+        
+        # Minimal path validation
+        if "/../" in base_url or re.search(r"/%2e%2e/", base_url, re.IGNORECASE):
+            raise ValueError("Invalid path")
+        
+        parsed = urlparse(base_url)
+        
+        # Protocol check
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError("Invalid protocol")
+        
+        # Host check
+        if not parsed.hostname:
+            raise ValueError("Invalid host")
+        
+        return urlunparse(parsed)
+    except Exception:
+        raise ValueError("Invalid URL")
 
 
 def _request(url, timeout=6):
@@ -96,7 +125,7 @@ def check_web(host: str, scan_id: str = None) -> list:
     scan_id  = scan_id or f"web_{int(datetime.utcnow().timestamp())}"
 
     for scheme, port in [("http", 80), ("https", 443)]:
-        url  = f"{scheme}://{host}:{port}/"
+        url  = build_validated_url(scheme, host, port, "/")
         resp = _request(url)
         if resp is None:
             continue
@@ -177,7 +206,7 @@ def check_web(host: str, scan_id: str = None) -> list:
             ))
 
         # ── robots.txt sensitive path disclosure ───────────────
-        robots_resp = _request(f"{scheme}://{host}:{port}/robots.txt")
+        robots_resp = _request(build_validated_url(scheme, host, port, "/robots.txt"))
         if robots_resp and robots_resp.status_code == 200:
             sensitive = re.findall(r"Disallow:\s*(/\S+)", robots_resp.text)
             sensitive_hit = [p for p in sensitive if any(
@@ -198,7 +227,7 @@ def check_web(host: str, scan_id: str = None) -> list:
         for path in ADMIN_PATHS:
             try:
                 r = requests.get(
-                    f"{scheme}://{host}:{port}{path}",
+                    build_validated_url(scheme, host, port, path),
                     timeout=4, verify=False, allow_redirects=False,
                     headers={"User-Agent": "VulnSense/1.0"}
                 )
